@@ -1,0 +1,55 @@
+‎require-resource-limits‎
+Loading
+Skip to content
+Navigation Menu
+daasnigeria
+daascohort3
+
+Code
+Issues
+Pull requests
+5
+Actions
+daascohort3/general_info/k8s-security/examples/kyverno/kyverno-policies
+/require-resource-limits.yaml
+Kamilu-Nurudeen
+Kamilu-Nurudeen
+add k8s-security
+5cd6f0e
+ · 
+3 days ago
+30 lines (29 loc) · 835 Bytes
+
+Code
+
+Blame
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Require Resource Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      All pods must have CPU and memory resource limits defined.
+      This prevents resource exhaustion and ensures fair scheduling.
+spec:
+  validationFailureAction: enforce
+  rules:
+  - name: check-resource-limits
+    match:
+      resources:
+        kinds:
+        - Pod
+    validate:
+      message: "CPU and memory limits are required for all containers"
+      pattern:
+        spec:
+          containers:
+          - resources:
+              limits:
+                memory: "?*"
+                cpu: "?*"
+ 

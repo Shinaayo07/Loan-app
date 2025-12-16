@@ -1,0 +1,46 @@
+# mandatory-pod-security-context.yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-pod-security-context
+  annotations:
+    policies.kyverno.io/title: Require Pod Security Context
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >
+      This policy ensures that all Pods in application namespaces have a defined security context
+      to enhance security by enforcing non-root execution.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: require-pod-security-context
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          - Deployment
+          - StatefulSet
+          - DaemonSet
+          - Job
+          - CronJob
+          namespaces:
+          - "app-*"  # Apply to all application namespaces
+    preconditions:
+      all:
+      # Exclude kube-system and other system namespaces
+      - key: "{{request.namespace}}"
+        operator: NotIn
+        value: ["kube-system", "kube-public", "kube-node-lease", "cert-manager", "ingress-nginx"]
+    validate:
+      message: "Pod security context is mandatory. Containers must not allow privilege escalation and must drop all capabilities."
+      pattern:
+        spec:
+          containers:
+          - securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL

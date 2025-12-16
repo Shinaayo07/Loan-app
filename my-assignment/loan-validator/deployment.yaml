@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-validator-portal
+  namespace: default
+  labels:
+    app: loan-validator-portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loan-validator-portal
+  template:
+    metadata:
+      labels:
+        app: loan-validator-portal
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: loan-validator-portal-sa
+      hostNetwork: false #Ensure host network is disabled
+      hostPID: false   #Ensure host PID namespace is disabled
+      hostIPC: false   #Ensure host IPC namespace is disabled
+      containers:
+      - name: loan-validator-portal
+        image: daasnigeria/daasrepo:loan-validator-portal
+        imagePullPolicy: Always
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+           drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+        ports:
+        - containerPort: 8080
+          name: http
+        envFrom:
+        - configMapRef:
+            name: loan-validator-portal-config
+        - secretRef:
+            name: loan-validator-portal-secret
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "200m"
+          limits:
+            memory: "256Mi"
+            cpu: "400m"
