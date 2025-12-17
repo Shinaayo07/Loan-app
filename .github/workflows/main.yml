@@ -52,7 +52,7 @@ jobs:
           cd government_api/backend && go test -v ./...
 
       - name: Scan code with Trivy
-        uses: aquasecurity/trivy-action@v0.9.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-path: './government_api/backend'
