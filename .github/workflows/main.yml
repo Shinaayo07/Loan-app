@@ -50,3 +50,21 @@ jobs:
       - name: Run tests
         run: |
           cd government_api/backend && go test -v ./...
+
+      - name: Scan code with Trivy
+        uses: aquasecurity/trivy-action@v0.9.0
+        with:
+          scan-type: 'fs'
+          scan-path: './government_api/backend'
+          format: 'json'
+          exit-code: '1'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-report.json'
+
+      - name: Upload Trivy scan results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-report
+          path: trivy-report.json
