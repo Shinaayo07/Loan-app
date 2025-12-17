@@ -51,7 +51,7 @@ jobs:
         run: go mod tidy
 
       - name: Build project
-        run: go build -v ./...
+        run: go build -v main.go
 
       - name: Run tests
         run: go test -v ./...
