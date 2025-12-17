@@ -56,15 +56,15 @@ jobs:
         with:
           scan-type: 'fs'
           scan-path: './government_api/backend'
-          format: 'json'
+          format: 'table'
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          output: 'trivy-report.json'
+          output: 'trivy-report.txt'
 
       - name: Upload Trivy scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-report
-          path: trivy-report.json
+          path: trivy-report.txt
