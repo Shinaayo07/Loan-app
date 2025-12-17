@@ -6,23 +6,31 @@ on:
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
-    
   schedule:
-    - cron: '0 0 * * 0' # Weekly on Sundays at midnight
+    - cron: '0 0 * * 0'
 
 permissions:
   contents: read
 
 jobs:
-  government-api-build:
-    name: Build, Test and Scan Government API
+  build-and-scan:
+    name: Build, Test and Scan
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: 
+          - name: government-api
+            path: './government-api/backend'  # Different paths
+          - name: loan-api
+            path: './loan_validator_portal/backend'
+    defaults:
+      run:
+        working-directory: ${{ matrix.component.path }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up GO
         uses: actions/setup-go@v4
@@ -35,89 +43,33 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.component.name }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-  
+            ${{ runner.os }}-go-${{ matrix.component.name }}-
 
       - name: Install dependencies
-        run: |
-          cd loan_validator_portal/backend && go mod tidy
+        run: go mod tidy
 
       - name: Build project
-        run: |
-          cd loan_validator_portal/backend && go build -v ./...
+        run: go build -v ./...
 
       - name: Run tests
-        run: |
-          cd loan_validator_portal/backend && go test -v ./...
+        run: go test -v ./...
 
       - name: Scan code with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-path: './loan_validator_portal/backend'
+          scan-ref: '.'
           format: 'json'
           exit-code: '0'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          output: 'government-trivy-report.json'
+          output: '${{ matrix.component.name }}-trivy-report.json'
 
       - name: Upload Trivy scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: government-trivy-scan-report
-          path: government-trivy-report.json
-
-  loan-api-build:
-    name: Build, Test and Scan Loan API
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Set up GO
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-  
-
-      - name: Install dependencies
-        run: |
-          cd loan_validator_portal/backend && go mod tidy
-
-      - name: Build project
-        run: |
-          cd loan_validator_portal/backend && go build -v ./...
-
-      - name: Run tests
-        run: |
-          cd loan_validator_portal/backend && go test -v ./...
-
-      - name: Scan code with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-path: './loan_validator_portal/backend'
-          format: 'json'
-          exit-code: '0'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          output: 'loan-api-trivy-report.json'
-
-      - name: Upload Trivy scan results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: loan-api-trivy-scan-report
-          path: loan-api-trivy-report.json
+          name: ${{ matrix.component.name }}-trivy-scan-report
+          path: '${{ matrix.component.name }}-trivy-report.json'
