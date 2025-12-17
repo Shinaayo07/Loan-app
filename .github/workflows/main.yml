@@ -21,7 +21,7 @@ jobs:
       matrix:
         component: 
           - name: government-api
-            path: './government-api/backend'  # Different paths
+            path: './government_api/backend'  # Different paths
           - name: loan-api
             path: './loan_validator_portal/backend'
     defaults:
