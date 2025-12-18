@@ -54,13 +54,13 @@ jobs:
     
      - name: Save Docker image 
        run: |
-          docker save ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }} -o /tmp/${{ matrix.component.name }}.tar
+          docker save ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }} -o ${{ matrix.component.name }}.tar
 
      - name: Scan Docker image with Trivy
        uses: aquasecurity/trivy-action@master
        with:
          scan-type: 'image'
-         scan-ref: /tmp/${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }}
+         scan-ref: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }}
          format: 'json'
          exit-code: '0'
          vuln-type: 'os,library'
