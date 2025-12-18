@@ -24,10 +24,10 @@ jobs:
        component:
          - name: government-api
            context: ./government_api/backend
-           dockerfile: ./government_api/backend/Dockerfile
+           dockerfile: Dockerfile
          - name: loan-validator-portal
            context: ./loan_validator_portal/backend
-           dockerfile: ./loan_validator_portal/backend/Dockerfile.instrumented
+           dockerfile: Dockerfile.instrumented
    steps:
      - name: Checkout code
        uses: actions/checkout@v4
