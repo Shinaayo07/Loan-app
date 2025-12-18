@@ -170,27 +170,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Find YAML files
-        id: find-yaml
-        run: |
-          # Find all YAML files in the component directory
-          FILES=$(find "${{ matrix.component.path }}" -name "*.yaml" -o -name "*.yml" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
-      
-          if [ -z "$FILES" ]; then
-           echo "No YAML files found in ${{ matrix.component.path }}"
-           echo "found=false" >> $GITHUB_OUTPUT
-          else
-           echo "Found files: $FILES"
-           echo "files=$FILES" >> $GITHUB_OUTPUT
-           echo "found=true" >> $GITHUB_OUTPUT
-          fi
 
       - name: Run Kubesec scanner
-        if: steps.find-yaml.outputs.found == 'true'
         uses: controlplaneio/kubesec-action@43d0ddff5ffee89a6bb9f29b64cd865411137b14
         with:
-          files: ${{ steps.find-yaml.outputs.files }}
+          files: ${{ matrix.component.path }}
           format: t
           output: '${{ matrix.component.name }}-kubesec-report.json'
           exit-code: '0'
