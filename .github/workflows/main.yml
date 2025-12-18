@@ -156,32 +156,37 @@ jobs:
      matrix:
        component:
          - name: government-api
-           path: ./my-assignment/government-api/*.yaml
+           path: ./my-assignment/government-api
          - name: loan-validator-portal
-           path: ./my-assignment/loan-validator-portal/*.yaml
+           path: ./my-assignment/loan-validator-portal
          - name: postgres
-           path: ./my-assignment/postgres/*.yaml
+           path: ./my-assignment/postgres
          - name: common-resources
-           context: ./my-assignment/common-resources/
-           path: ./my-assignment/common-resources/*.yaml
+           path: ./my-assignment/common-resources
          - name: otel
-           path: ./my-assignment/otel/*.yaml
+           path: ./my-assignment/otel
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Run Kubesec scanner
         uses: controlplaneio/kubesec-action@43d0ddff5ffee89a6bb9f29b64cd865411137b14
         with:
-          files: ${{ matrix.component.path }}
-          format: t
-          output: '${{ matrix.component.name }}-kubesec-report.json'
+          files: ${{ matrix.component.path }}/**/*.yaml
+          format: sarif
+          output: '${{ matrix.component.name }}-kubesec.sarif'
           exit-code: '0'
+        
+      - name: Upload to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: '${{ matrix.component.name }}-kubesec.sarif' 
 
       - name: Upload Kubesec scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.component.name }}-kubesec-scan-report
-          path: ${{ matrix.component.name }}-kubesec-report.json
+          path: ${{ matrix.component.name }}-kubesec-report.sarif
