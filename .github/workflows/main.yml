@@ -23,7 +23,7 @@ jobs:
      matrix:
        component:
          - name: government-api
-           context: ./government-api/backend
+           context: ./government_api/backend
            dockerfile: ./government_api/backend/Dockerfile
          - name: loan-validator-portal
            context: ./loan_validator_portal/backend
