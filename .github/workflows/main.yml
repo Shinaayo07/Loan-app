@@ -18,8 +18,6 @@ jobs:
   kubesec-scan:
     name: Kubernetes-manifest Scan
     runs-on: ubuntu-latest
-    needs: docker-build-push 
-    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       actions: read
