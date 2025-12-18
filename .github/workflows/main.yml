@@ -200,3 +200,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.component.name }}-kubesec-scan-report
+          path: ${{ matrix.component.name }}-kubesec-report.json
