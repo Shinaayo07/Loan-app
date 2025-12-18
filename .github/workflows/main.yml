@@ -192,7 +192,7 @@ jobs:
         with:
           files: ${{ steps.find-yaml.outputs.files }}
           format: 'json'
-          output: '${{ matrix.component.name }}-kubesec-report.json'
+          output: '${{ matrix.name }}-kubesec-report.json'
           exit-code: '0'
 
       - name: Upload Kubesec scan results
@@ -200,4 +200,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}-kubesec-scan-report
-          path: kubesec-reports/${{ matrix.name }}-kubesec-report.json
+          path: ${{ matrix.name }}-kubesec-report.json
