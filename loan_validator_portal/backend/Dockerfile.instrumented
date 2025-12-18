@@ -4,7 +4,7 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /app
 
 # Copy all backend files including vendor
-COPY backend/ ./
+COPY . ./
 
 # Build the instrumented application using vendored dependencies
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o loan-validator-portal main_instrumented.go
@@ -20,10 +20,10 @@ RUN addgroup -S loan-validatorgrp \
 WORKDIR /app/backend
 
 # Copy the binary from builder
-COPY --from=builder --chown=loan-/app/loan-validator-portal .
+COPY --from=builder --chown=loan-validatorusr:loan-validatorgrp /app/loan-validator-portal .
 
 # Copy templates to /app/frontend/templates/ (relative path ../frontend/templates/* from /app/backend)
-COPY frontend/templates /app/frontend/templates/
+COPY --from=builder --chown=loan-validatorusr:loan-validatorgrp frontend/templates /app/frontend/templates/
 
 # Switch to non-root user
 USER loan-validatorusr
