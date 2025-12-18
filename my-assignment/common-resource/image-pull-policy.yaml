@@ -1,15 +1,14 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: if-not-present-image-pull-policy
+  name: Always-Pull-Images
   annotations:
-    policies.kyverno.io/title: if-not-present-image Pull Policy
+    policies.kyverno.io/title: always-pull-images
     policies.kyverno.io/category: Best Practices
     policies.kyverno.io/severity: medium
     policies.kyverno.io/subject: Pod
     policies.kyverno.io/description: >-
-      Image pull policy should be set to 'IfNotPresent' to optimize bandwidth and improve deployment speed 
-      by avoiding unnecessary image downloads.
+      Image pull policy should be set to Always to ensure the latest image is pulled.
 spec:
   validationFailureAction: enforce
   rules:
@@ -24,4 +23,4 @@ spec:
         spec:
           containers:
           - (name): "?*"
-            imagePullPolicy: IfNotPresent
+            imagePullPolicy: Always
