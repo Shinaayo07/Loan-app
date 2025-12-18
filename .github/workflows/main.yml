@@ -175,10 +175,10 @@ jobs:
         id: find-yaml
         run: |
           # Find all YAML files in the component directory
-          FILES=$(find "${{ matrix.path }}" -name "*.yaml" -o -name "*.yml" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
+          FILES=$(find "${{ matrix.component.path }}" -name "*.yaml" -o -name "*.yml" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
       
           if [ -z "$FILES" ]; then
-           echo "No YAML files found in ${{ matrix.path }}"
+           echo "No YAML files found in ${{ matrix.component.path }}"
            echo "found=false" >> $GITHUB_OUTPUT
           else
            echo "Found files: $FILES"
@@ -191,13 +191,13 @@ jobs:
         uses: controlplaneio/kubesec-action@43d0ddff5ffee89a6bb9f29b64cd865411137b14
         with:
           files: ${{ steps.find-yaml.outputs.files }}
-          format: 'json'
-          output: '${{ matrix.name }}-kubesec-report.json'
+          format: t
+          output: '${{ matrix.component.name }}-kubesec-report.json'
           exit-code: '0'
 
       - name: Upload Kubesec scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}-kubesec-scan-report
-          path: ${{ matrix.name }}-kubesec-report.json
+          name: ${{ matrix.component.name }}-kubesec-scan-report
+          path: ${{ matrix.component.name }}-kubesec-report.json
