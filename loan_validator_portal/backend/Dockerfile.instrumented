@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . ./
 
 # Build the instrumented application using vendored dependencies
-RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o loan-validator-portal main_instrumented.go
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o loan-validator-portal ./backend/main_instrumented.go
 
 # Final stage
 FROM alpine:3.18
