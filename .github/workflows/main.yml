@@ -18,6 +18,7 @@ jobs:
   build-and-scan:
     name: Build, Test and Scan
     runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
     strategy:
       matrix:
         component: 
@@ -140,8 +141,7 @@ jobs:
        uses: sigstore/cosign-installer@main
 
      - name: Write Cosign key
-       run: 'echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key'
-       shell: bash
+       run: 'printf "%s" "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key'
 
      - name: Sign Docker image with Cosign
        env:
