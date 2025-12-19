@@ -43,13 +43,9 @@ jobs:
           name: kubesec-scan-report
           path: kubesec-report.json
       
-      - name: Install kube-score
-        run: |
-          curl -L https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz -o kube-score.tar.gz
-          tar -xzf kube-score.tar.gz
-          chmod +x kube-score
-          sudo mv kube-score /usr/local/bin/kube-score
-
-      - name: Pod security standards check
-        run: |
-          kube-score score ./my-assignment/government-api/deployment.yaml --output-format json > kube-score-report.json || true
+      - name: Run Kube-scoe
+        uses: controlplaneio/kubesec-action@v1
+        with:
+          file: ./my-assignment/government-api/deployment.yaml
+          output_format: 'json'
+          output_file: 'kubesec-score-report.json'
