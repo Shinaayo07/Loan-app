@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Kubesec scanner
-        uses: controlplaneio/kubesec-action@43d0ddff5ffee89a6bb9f29b64cd865411137b14
+        uses: controlplaneio/kubesec-action@master
         with:
           input: "my-assignment/government-api my-assignment/loan-validator-portal my-assignment/postgres my-assignment/common-resources my-assignment/otel"
           format: json
