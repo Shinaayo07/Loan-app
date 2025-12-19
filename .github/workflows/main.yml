@@ -68,7 +68,7 @@ jobs:
     
       - name: Run kube-linter Scan
         run: |
-          kube-linter lint ./my-assignment/government-api/deployment.yaml --format json > kube-linter-report.json || true
+          kube-linter lint ./my-assignment/government-api/*.yaml --format json > kube-linter-report.json || true
 
       - name: Upload kube-linter Report
         uses: actions/upload-artifact@v4
