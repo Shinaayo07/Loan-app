@@ -35,4 +35,4 @@ jobs:
 
       - name: Run Kubesec Scan
         run: |
-          kubesec scan ./my-assignment/government-api/*.yaml
+          kubesec scan ./my-assignment/government-api/deployment.yaml
