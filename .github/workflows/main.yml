@@ -135,7 +135,22 @@ jobs:
        with:
          name: ${{ matrix.component.name }}-docker-trivy-scan-report
          path: '${{ matrix.component.name }}-docker-trivy-report.txt'
-    
+
+     - name: Install Cosign for image signing
+       uses: sigstore/cosign-installer@main
+
+     - name: Write Cosign key
+       run: 'echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key'
+       shell: bash
+       env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+
+     - name: Sign Docker image with Cosign
+       env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+       run: |
+          cosign sign --key cosign.key ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }}
+
      - name: Push Docker image to Docker Hub
        if: always()
        run: |
@@ -145,6 +160,7 @@ jobs:
   kubesec-scan:
     name: Kubernetes-manifest Scan
     runs-on: ubuntu-latest
+    needs: docker-build-push
     permissions:
       contents: read
       actions: read
@@ -162,7 +178,9 @@ jobs:
 
       - name: Run Kubesec Scan
         run: |
-          kubesec scan ./my-assignment/government-api/deployment.yaml > kubesec-report.json || true
+          kubesec scan ./my-assignment/government-api/deployment.yaml \
+                       ./my-assignment/loan-validator/deployment.yaml \
+                        > kubesec-report.json || true
         
       - name: Upload Kubesec Report
         uses: actions/upload-artifact@v4
@@ -178,7 +196,9 @@ jobs:
 
       - name: Pod security standards check
         run: |
-          kube-score score ./my-assignment/government-api/deployment.yaml --output-format json > kube-score-report.json || true
+          kube-score score ./my-assignment/government-api/deployment.yaml \
+                           ./my-assignment/loan-validator/deployment.yaml \
+                           --output-format json > kube-score-report.json || true
 
       - name: Upload kube-score Report
         uses: actions/upload-artifact@v4
@@ -195,7 +215,9 @@ jobs:
     
       - name: Run kube-linter Scan
         run: |
-          kube-linter lint ./my-assignment/government-api/*.yaml --format json > kube-linter-report.json || true
+          kube-linter lint ./my-assignment/government-api/*.yaml \
+                           ./my-assignment/loan-validator/*.yaml \
+                           --format json > kube-linter-report.json || true
 
       - name: Upload kube-linter Report
         uses: actions/upload-artifact@v4
