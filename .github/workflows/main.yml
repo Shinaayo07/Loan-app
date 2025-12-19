@@ -14,6 +14,133 @@ permissions:
   contents: read
 
 jobs:
+  #Source code build, test, and scan
+  build-and-scan:
+    name: Build, Test and Scan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: 
+          - name: government-api
+            path: './government_api/backend'  # Different paths
+          - name: loan-api
+            path: './loan_validator_portal/backend'
+    defaults:
+      run:
+        working-directory: ${{ matrix.component.path }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up GO
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ matrix.component.name }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.component.name }}-
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build project
+        run: go build -v main.go
+
+      - name: Run tests
+        run: go test -v main.go
+
+      - name: Scan code with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          exit-code: '0'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: '${{ matrix.component.name }}-trivy-report.json'
+
+      - name: Upload Trivy scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.component.name }}-trivy-scan-report
+          path: '${{ matrix.component.name }}-trivy-report.json'
+  #Docker build, scan, and push
+  docker-build-push:
+   name: Build and push Docker Always-Pull-Images
+   runs-on: ubuntu-latest
+   needs: build-and-scan
+   if: github.ref == 'refs/heads/main'
+
+   strategy:
+     matrix:
+       component:
+         - name: government-api
+           context: ./government_api
+           dockerfile: ./government_api/backend/Dockerfile
+         - name: loan-validator-portal
+           context: ./loan_validator_portal
+           dockerfile: ./loan_validator_portal/backend/Dockerfile.instrumented
+   steps:
+     - name: Checkout code
+       uses: actions/checkout@v4
+     
+     - name: Set up Docker Buildx
+       uses: docker/setup-buildx-action@v2
+      
+     - name: Log in to Docker Hub
+       uses: docker/login-action@v3
+       with:
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+     - name: Build Docker image
+       id: build-image
+       env:
+          IMAGE_NAME: ${{ matrix.component.name }}
+       run: |
+          docker build \
+            --build-arg IMAGE_NAME=${{ matrix.component.name }} \
+            -f ${{ matrix.component.dockerfile }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }} \
+            ${{ matrix.component.context }}
+    
+     - name: Save Docker image 
+       run: |
+          docker save ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }} -o ${{ matrix.component.name }}.tar
+
+     - name: Scan Docker image with Trivy
+       uses: aquasecurity/trivy-action@master
+       with:
+         scan-type: 'image'
+         scan-ref: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }}
+         format: 'table'
+         exit-code: '0'
+         vuln-type: 'os,library'
+         severity: 'CRITICAL,HIGH'
+         output: '${{ matrix.component.name }}-docker-trivy-report.txt'
+     
+     - name: Upload Docker Trivy scan results
+       if: always()
+       uses: actions/upload-artifact@v4
+       with:
+         name: ${{ matrix.component.name }}-docker-trivy-scan-report
+         path: '${{ matrix.component.name }}-docker-trivy-report.txt'
+    
+     - name: Push Docker image to Docker Hub
+       if: always()
+       run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.component.name }}:${{ matrix.component.name }}
+
   #Kubernetes manifest security scan using Kubesec        
   kubesec-scan:
     name: Kubernetes-manifest Scan
