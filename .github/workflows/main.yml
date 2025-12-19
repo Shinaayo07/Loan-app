@@ -48,7 +48,7 @@ jobs:
           curl -sSL https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64 \
           -o kube-score
           chmod +x kube-score
-          sudo mv kube-score /usr/local/bin/
+          sudo mv kube-score /usr/local/bin/kube-score
 
       - name: Pod security standards check
         run: |
