@@ -27,18 +27,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Kubesec scanner
-        uses: controlplaneio/kubesec-action@master
-        with:
-          input: "my-assignment/government-api my-assignment/loan-validator-portal my-assignment/postgres my-assignment/common-resources my-assignment/otel"
-          format: json
-          template: json
-          output: 'kubesec-report.json'
-          exit-code: '0'
+      - name: Install Kubesec
+        run: |
+          curl -sSL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec_linux_amd64.tar.gz \
+          | tar -xz
+          sudo mv kubesec /usr/local/bin/
 
-      - name: Upload Kubesec scan results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: kubesec-scan-report
-          path: kubesec-report.json
+      - name: Run Kubesec Scan
+        run: |
+          kubesec scan ./my-assignment/government-api/*.yaml
