@@ -38,7 +38,7 @@ jobs:
           kubesec scan ./my-assignment/government-api/deployment.yaml > kubesec-report.json || true
         
       - name: Upload Kubesec Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kubesec-scan-report
           path: kubesec-report.json
