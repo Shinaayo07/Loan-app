@@ -31,11 +31,11 @@ jobs:
         uses: controlplaneio/kubesec-action@43d0ddff5ffee89a6bb9f29b64cd865411137b14
         with:
           input: |
-            my-assignment/government-api/
-            my-assignment/loan-validator-portal/
-            my-assignment/postgres/
-            my-assignment/common-resources/
-            my-assignment/otel/
+            ./my-assignment/government-api/deployment.yaml
+            ./my-assignment/loan-validator-portal/deployment.yaml
+            ./my-assignment/postgres/statefulset.yaml
+            ./my-assignment/common-resources/deny-default-network.yaml
+            ./my-assignment/otel/otel-collector-deployment.yaml
           format: json
           template: json
           output: 'kubesec-report.json'
